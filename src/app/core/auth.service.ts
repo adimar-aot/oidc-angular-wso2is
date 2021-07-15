@@ -5,6 +5,8 @@ import { BehaviorSubject, combineLatest, Observable, ReplaySubject, throwError }
 import { filter, map } from 'rxjs/operators';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { ConfigService } from './config.service';
+import { MatDialog } from '@angular/material';
+import { LoginComponent } from '../login/login.component';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -39,7 +41,8 @@ export class AuthService {
     private oauthService: OAuthService,
     private configService: ConfigService,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private dialogService: MatDialog
   ) {
     // Useful for debugging:
     this.oauthService.events.subscribe(event => {
@@ -151,8 +154,8 @@ export class AuthService {
         // login(...) should never have this, but in case someone ever calls
         // initImplicitFlow(undefined | null) this could happen.
         if (this.oauthService.state && this.oauthService.state !== 'undefined' && this.oauthService.state !== 'null') {
-          console.log('There was state, so we are sending you to: ' + this.oauthService.state);
-          this.router.navigateByUrl(this.oauthService.state);
+          console.log('There was state, so we are sending you to: ' + decodeURIComponent(this.oauthService.state));
+          this.router.navigateByUrl(decodeURIComponent(this.oauthService.state));
         }
       })
       .catch(() => this.isDoneLoadingSubject$.next(true));
@@ -183,7 +186,14 @@ export class AuthService {
   }
 
   public login(targetUrl?: string) {
-    this.oauthService.initLoginFlow(encodeURIComponent(targetUrl || this.router.url));
+    var dialogRef = this.dialogService.open(LoginComponent, { width: '300px' });
+    dialogRef.afterClosed().subscribe(data => {
+      console.log(data);
+      if (!!data)
+        this.oauthService.customQueryParams = { fidp: data };
+      this.oauthService.initLoginFlow(encodeURIComponent(targetUrl || this.router.url));
+    });
+    // this.oauthService.initLoginFlow(encodeURIComponent(targetUrl || this.router.url));
   }
 
   public logout() {
@@ -222,6 +232,8 @@ export class AuthService {
     urlSearchParams.append('token', token);
     urlSearchParams.append('token_type_hint', 'access_token');
     urlSearchParams.append('client_id', this.oauthService.clientId);
+    if (!!this.oauthService.dummyClientSecret)
+      urlSearchParams.append('client_secret', this.oauthService.dummyClientSecret);
     this.http.post(revocationUrl, urlSearchParams.toString(), { headers })
       .subscribe(result => {
           console.log('Access token and related refresh token (if any) have been successfully revoked');

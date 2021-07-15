@@ -7,6 +7,9 @@ import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { FallbackComponent } from './fallback.component';
 import { ShouldLoginComponent } from './should-login.component';
+import { LoginComponent } from './login/login.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialogModule, MatListModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -14,6 +17,7 @@ import { ShouldLoginComponent } from './should-login.component';
     AppMenuComponent,
     FallbackComponent,
     ShouldLoginComponent,
+    LoginComponent,
   ],
   imports: [
     BrowserModule,
@@ -27,9 +31,13 @@ import { ShouldLoginComponent } from './should-login.component';
 
       { path: 'should-login', component: ShouldLoginComponent },
       { path: '**', component: FallbackComponent },
-    ])
+    ]),
+    BrowserAnimationsModule,
+    MatDialogModule,
+    MatListModule
   ],
   providers: [],
+  entryComponents: [LoginComponent],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
